@@ -1,0 +1,30 @@
+apiVersion: skaffold/v4beta8
+kind: Config
+metadata:
+  name: kubernetes-lab
+build:
+  artifacts:
+    - image: lab-frontend
+      custom:
+        buildCommand: docker build -t lab-frontend docker/frontend/.
+    - image: lab-backend
+      custom:
+        buildCommand: docker build -t lab-backend docker/backend/.
+deploy:
+  helm:
+    releases:
+      - name: mysql-release
+        chartPath: charts/mysql-chart
+        valuesFiles:
+          - charts/mysql-chart/values.yaml
+        version: 0.1.0
+      - name: frontend-release
+        chartPath: charts/frontend-chart
+        valuesFiles:
+          - charts/frontend-chart/values.yaml
+        version: 0.1.0
+      - name: backend-release
+        chartPath: charts/backend-chart
+        valuesFiles:
+          - charts/backend-chart/values.yaml
+        version: 0.1.0

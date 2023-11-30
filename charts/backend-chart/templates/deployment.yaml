@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      initContainers:
+      - name: backend-wait-for-db
+        image: mysql:latest
+        command: ['sh', '-c', 'until mysqladmin ping -h mysql-service -P 3306 --silent; do echo "Waiting for database..."; sleep 2; done;']
+      containers:
+      - name: backend
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Never
+        ports:
+        - containerPort: {{ .Values.service.port }}

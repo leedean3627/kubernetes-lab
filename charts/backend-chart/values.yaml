@@ -1,0 +1,8 @@
+replicaCount: 2
+
+image:
+  repository: lab-backend
+  tag: latest
+
+service:
+  port: 3000

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World</title>
+</head>
+<body>
+    <h1>Hello Dean!</h1>
+
+    <!-- Form for data submission -->
+    <form id="add-person-form">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="number" id="age" placeholder="Age" required>
+        <button type="submit">Add Person</button>
+    </form>
+
+    <table border="1" id="data-table">
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Select</th>
+        </tr>
+    </table>
+
+    <button id="delete-selected" disabled>Delete Selected</button>
+
+    <script>
+        let selectedIds = [];
+
+        function fetchData() {
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById("data-table");
+                    while(table.rows.length > 1) {
+                        table.deleteRow(1);
+                    }
+                    data.forEach(item => {
+                        const row = table.insertRow();
+                        const cell1 = row.insertCell(0);
+                        const cell2 = row.insertCell(1);
+                        const cell3 = row.insertCell(2);
+                        cell1.innerHTML = item.name;
+                        cell2.innerHTML = item.age;
+                        cell3.innerHTML = `<input type='checkbox' data-id='${item.id}' onchange='toggleSelection(this)'>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    alert('Error fetching data. See console for details.');
+                });
+        }
+
+        function toggleSelection(checkbox) {
+            const id = checkbox.getAttribute('data-id');
+            const index = selectedIds.indexOf(id);
+            if (checkbox.checked) {
+                if (index === -1) selectedIds.push(id);
+            } else {
+                if (index > -1) selectedIds.splice(index, 1);
+            }
+            document.getElementById('delete-selected').disabled = selectedIds.length === 0;
+        }
+
+        document.getElementById('delete-selected').addEventListener('click', () => {
+            if (selectedIds.length === 0) {
+                alert('No rows selected');
+                return;
+            }
+            const confirmation = confirm("Are you sure you want to delete the selected people?");
+            if (confirmation) {
+                fetch('/api/delete-people', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ids: selectedIds })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('People deleted:', data);
+                    fetchData(); // Refresh the data table
+                    selectedIds = [];
+                    document.getElementById('delete-selected').disabled = true;
+                })
+                .catch(error => {
+                    console.error('Error deleting people:', error);
+                    alert('Error deleting people. See console for details.');
+                });
+            }
+        });
+        document.getElementById('add-person-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+
+            fetch('/api/add-person', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, age })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Person added:', data);
+                fetchData(); // Refresh the data table
+                // Optionally, clear the form fields
+                document.getElementById('name').value = '';
+                document.getElementById('age').value = '';
+            })
+            .catch(error => {
+                console.error('Error adding person:', error);
+                alert('Error adding person. See console for details.');
+            });
+        });
+
+        window.onload = fetchData;
+    </script>
+</body>
+</html>

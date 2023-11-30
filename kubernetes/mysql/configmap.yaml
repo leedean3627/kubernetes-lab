@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-script
+data:
+  init-db.sql: |
+    CREATE DATABASE IF NOT EXISTS mydatabase;
+    USE mydatabase;
+
+    CREATE TABLE IF NOT EXISTS people (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        age INT NOT NULL
+    );
+
+    INSERT INTO people (name, age) VALUES ('Alice', RAND() * 100);
+    INSERT INTO people (name, age) VALUES ('Bob', RAND() * 100);
+    INSERT INTO people (name, age) VALUES ('Charlie', RAND() * 100);
+    INSERT INTO people (name, age) VALUES ('Jimmy', RAND() * 100);
+    INSERT INTO people (name, age) VALUES ('Candy', RAND() * 100);
+    INSERT INTO people (name, age) VALUES ('Fox', RAND() * 100);
+    INSERT INTO people (name, age) VALUES ('Test', RAND() * 100);
+
+    ALTER USER 'root'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'password123$';
+    FLUSH PRIVILEGES;
